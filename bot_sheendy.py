@@ -190,32 +190,34 @@ async def sync_commands(interaction: discord.Interaction):
     
     return
 
-# @bot.tree.command(name="add-user", description="Add a user to Nitro bypass")
-# async def add_user(interaction: discord.Interaction, user: discord.User):
-#     global enabled
-#     if(user.name in enabled['users']):
-#         await interaction.response.send_message(f"User `{user.name}` already in list")
-#         return  
-#     enabled['users'].append(user.name)
-#     print(f"Appended {user.name} to list")
-#     print(f"Enabled List: {enabled['users']}")
-#     await interaction.response.send_message(f"User `{user.name}` added successfully")
-#     save()
-#     return
+@bot.tree.command(name="add-user", description="Add a user to Nitro bypass")
+async def add_user(interaction: discord.Interaction, user: discord.User):
+    global enabled
+    if(user.name in enabled['users']):
+        await interaction.response.send_message(f"User `{user.name}` already in list")
+        return  
+    enabled['users'].append(user.name)
+    print(f"Appended {user.name} to list")
+    print(f"Enabled List: {enabled['users']}")
+    await interaction.response.send_message(f"User `{user.name}` added successfully")
+    save()
+    return
 
-# @bot.tree.command(name="delete-user", description="Deletes user from Nitro bypass")
-# async def delete_user(interaction: discord.Interaction, user: discord.User):
-#     global enabled
-#     if(user.name not in enabled['users']):
-#         await interaction.response.send_message("User not found in enabled list")
-#         return
+@bot.tree.command(name="delete-user", description="Deletes user from Nitro bypass")
+async def delete_user(interaction: discord.Interaction, user: discord.User):
+    global enabled
+    if(user.name not in enabled['users']):
+        await interaction.response.send_message("User not found in enabled list")
+        return
     
-#     enabled['users'].remove(user.name)
-#     print(f"Removed {user.name} from list")
-#     print(f"Enabled List: {enabled['users']}")
-#     await interaction.response.send_message(f"User `{user.name}` deleted successfully")
-#     save()
-#     return
+    enabled['users'].remove(user.name)
+    print(f"Removed {user.name} from list")
+    print(f"Enabled List: {enabled['users']}")
+    await interaction.response.send_message(f"User `{user.name}` deleted successfully")
+    save()
+    return
+
+
 
 ignorelist = ['baddies']
 
@@ -226,9 +228,7 @@ async def on_message(message: discord.message.Message):
     #     return
     user = message.author
     text = message.content
-    print()
     if(message.webhook_id):
-        print("webhook detected")
         return
 
     if(True):
@@ -236,17 +236,14 @@ async def on_message(message: discord.message.Message):
         match = re.findall(r"(?<!<|a):([^\W\ ]*):", text)
         if(len(match) > 0):
             valid = False
-            print(f"At least one emoji found in {text}")
+            print(f"[{message.guild.name}] {user.name} -- {text}")
             
-            print(f"MATCHED GROUPS: {match}")
+            textbefore = text
             for group in set(match):    
                 global emoji_names
                 for i in emoji_names:
-                    if(i.name == group):
-                        print(f"From: {user.id}")
-                        print(f"Before: {text}")
+                    if(i.name == group and '~' not in group):
                         text = text.replace(f":{i.name}:", f"<{'a' * i.animated}:{i.name}:{i.id}>")
-                        print(f"After: {text}")
                         valid = True                        
             if(valid):
                 await message.delete()
@@ -255,8 +252,15 @@ async def on_message(message: discord.message.Message):
                 webhook = await message.channel.create_webhook(name=name, avatar=avatar_bytes)
                 if(len(text) > 2000):
                     await message.channel.send("*This message has too many emojis to send with a bot.*")
+                if(message.reference):
+                    webhook.send(text)
+
                 await webhook.send(text)
                 await webhook.delete()
+
+                print(f"Before: {textbefore}")
+                print(f"After: {text}")
+                print()
 
     # global has_started
     # global custom_emoji_toggle
